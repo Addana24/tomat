@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filosofi Tomat - Mobile Web App</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#e74c3c">
+    <meta name="description" content="Jelajahi filosofi kehidupan melalui perjalanan tanaman tomat">
+    <link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="logo">🍅</div>
+                <h1>Filosofi Tomat</h1>
+                <p class="subtitle">Pelajaran Hidup dari Tanaman Sederhana</p>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-tab="philosophy">Filosofi</button>
+            <button class="tab-btn" data-tab="timelapse">Timelapse</button>
+            <button class="tab-btn" data-tab="journey">Perjalanan</button>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Philosophy Tab -->
+            <section id="philosophy" class="tab-content active">
+                <div class="philosophy-card">
+                    <h2>🌱 Dari Benih ke Buah</h2>
+                    <p>Seperti benih tomat yang kecil, setiap mimpi besar dimulai dari hal yang sederhana. Kesabaran dan perawatan yang konsisten akan menghasilkan buah yang manis.</p>
+                </div>
+
+                <div class="philosophy-card">
+                    <h2>☀️ Butuh Sinar Matahari</h2>
+                    <p>Tanaman tomat memerlukan sinar matahari untuk tumbuh. Begitu pula kita, membutuhkan energi positif dan dukungan dari sekitar untuk berkembang.</p>
+                </div>
+
+                <div class="philosophy-card">
+                    <h2>💧 Air Kehidupan</h2>
+                    <p>Penyiraman yang teratur namun tidak berlebihan mengajarkan kita tentang keseimbangan. Terlalu sedikit akan layu, terlalu banyak akan membusuk.</p>
+                </div>
+
+                <div class="philosophy-card">
+                    <h2>🌿 Pemangkasan Bijak</h2>
+                    <p>Memangkas daun yang tidak perlu membantu tanaman fokus pada pertumbuhan buah. Dalam hidup, kita juga perlu melepas hal-hal yang tidak produktif.</p>
+                </div>
+
+                <div class="philosophy-card">
+                    <h2>🍅 Hasil yang Manis</h2>
+                    <p>Setelah melewati proses panjang, buah tomat yang matang memberikan rasa yang sempurna. Kesabaran selalu berbuah manis.</p>
+                </div>
+            </section>
+
+            <!-- Timelapse Tab -->
+            <section id="timelapse" class="tab-content">
+                <div class="video-container">
+                    <h2>🎬 Timelapse Pertumbuhan Tomat</h2>
+                    <div class="video-wrapper">
+                        <div class="video-placeholder">
+                            <div class="play-button" onclick="loadVideo()">
+                                <span>▶️</span>
+                            </div>
+                            <p>Klik untuk memuat video timelapse</p>
+                            <small>Video menunjukkan pertumbuhan tomat dari benih hingga buah matang</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="video-info">
+                    <h3>Tahapan Pertumbuhan:</h3>
+                    <div class="growth-stages">
+                        <div class="stage">
+                            <span class="stage-icon">🌱</span>
+                            <div>
+                                <strong>Hari 1-7:</strong> Perkecambahan
+                                <p>Benih mulai berkecambah dan mengeluarkan akar pertama</p>
+                            </div>
+                        </div>
+                        <div class="stage">
+                            <span class="stage-icon">🌿</span>
+                            <div>
+                                <strong>Hari 8-21:</strong> Pertumbuhan Daun
+                                <p>Daun pertama muncul dan tanaman mulai fotosintesis</p>
+                            </div>
+                        </div>
+                        <div class="stage">
+                            <span class="stage-icon">🌸</span>
+                            <div>
+                                <strong>Hari 22-45:</strong> Pembungaan
+                                <p>Bunga kuning kecil mulai bermunculan</p>
+                            </div>
+                        </div>
+                        <div class="stage">
+                            <span class="stage-icon">🍅</span>
+                            <div>
+                                <strong>Hari 46-80:</strong> Pembuahan
+                                <p>Buah hijau terbentuk dan perlahan memerah</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Journey Tab -->
+            <section id="journey" class="tab-content">
+                <div class="journey-timeline">
+                    <h2>🛤️ Perjalanan Filosofis</h2>
+                    
+                    <div class="timeline-item">
+                        <div class="timeline-marker">1</div>
+                        <div class="timeline-content">
+                            <h3>Penanaman Niat</h3>
+                            <p>Seperti menanam benih, setiap perjalanan dimulai dengan niat yang jelas dan tanah hati yang subur.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-marker">2</div>
+                        <div class="timeline-content">
+                            <h3>Penyiraman Konsisten</h3>
+                            <p>Usaha kecil namun konsisten lebih berharga daripada usaha besar yang sporadis.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-marker">3</div>
+                        <div class="timeline-content">
+                            <h3>Menghadapi Badai</h3>
+                            <p>Tantangan dan kesulitan adalah bagian dari proses. Akar yang kuat terbentuk saat menghadapi angin kencang.</p>
+                        </div>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-marker">4</div>
+                        <div class="timeline-content">
+                            <h3>Berbagi Hasil</h3>
+                            <p>Buah yang matang tidak hanya untuk dinikmati sendiri, tetapi untuk dibagikan kepada sesama.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reflection-box">
+                    <h3>💭 Refleksi Hari Ini</h3>
+                    <textarea id="reflection" placeholder="Tuliskan refleksi Anda tentang pelajaran dari tanaman tomat..."></textarea>
+                    <button onclick="saveReflection()">Simpan Refleksi</button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>🌱 Tumbuh bersama alam, belajar dari kesederhanaan</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

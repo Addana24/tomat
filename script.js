@@ -23,68 +23,54 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Utility function to detect mobile
+// Device Detection Functions
+function isIOS() {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent);
+}
+
 function isMobile() {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
-// Create video element with proper mobile support
-function createVideoElement() {
-    const video = document.createElement('video');
-    
-    // Basic attributes
-    video.controls = true;
-    video.muted = true;
-    video.loop = true;
-    
-    // Mobile-specific attributes
-    video.setAttribute('playsinline', '');
-    video.setAttribute('webkit-playsinline', '');
-    video.preload = 'metadata';
-    
-    // Styling
-    video.style.width = '100%';
-    video.style.height = '100%';
-    video.style.objectFit = 'cover';
-    video.style.borderRadius = '10px';
-    
-    // Conditional autoplay (tidak di mobile)
-    if (!isMobile()) {
-        video.autoplay = true;
-    }
-    
-    // Create source element
-    const source = document.createElement('source');
-    source.src = './asset/tomat.mp4';
-    source.type = 'video/mp4';
-    video.appendChild(source);
-    
-    // Fallback text
-    const fallback = document.createElement('p');
-    fallback.textContent = 'Browser Anda tidak mendukung video HTML5.';
-    fallback.style.textAlign = 'center';
-    fallback.style.color = '#666';
-    fallback.style.padding = '2rem';
-    video.appendChild(fallback);
-    
-    return video;
+function isSafari() {
+    return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 }
 
-// Video Loading Function - FINAL VERSION
+// Video Loading Function - OPTIMIZED FOR IPHONE
 function loadVideo() {
     const videoWrapper = document.querySelector('.video-wrapper');
     const placeholder = document.querySelector('.video-placeholder');
     
-    // Show loading state
-    placeholder.innerHTML = `
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #e74c3c; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-            <p style="margin-top: 1rem;">Memuat video...</p>
-            <small style="color: #666; margin-top: 0.5rem;">Mohon tunggu sebentar</small>
+    console.log('🔍 Device Detection:');
+    console.log('iOS:', isIOS());
+    console.log('Mobile:', isMobile());
+    console.log('Safari:', isSafari());
+    
+    if (isIOS()) {
+        console.log('🍎 Loading iOS-optimized video');
+        loadIOSVideo();
+    } else if (isMobile()) {
+        console.log('📱 Loading mobile-optimized video');
+        loadMobileVideo();
+    } else {
+        console.log('🖥️ Loading desktop video');
+        loadDesktopVideo();
+    }
+}
+
+// iOS-Specific Video Loading
+function loadIOSVideo() {
+    const videoWrapper = document.querySelector('.video-wrapper');
+    
+    // Show loading first
+    videoWrapper.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 2rem;">
+            <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #e74c3c; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 1rem;"></div>
+            <p>Menyiapkan video untuk iOS...</p>
         </div>
     `;
     
-    // Add CSS for loading spinner
+    // Add spinner CSS
     if (!document.querySelector('#loading-spinner-css')) {
         const style = document.createElement('style');
         style.id = 'loading-spinner-css';
@@ -97,106 +83,290 @@ function loadVideo() {
         document.head.appendChild(style);
     }
     
-    // Test if video file exists first
+    // Test video accessibility first
     fetch('./asset/tomat.mp4', { method: 'HEAD' })
         .then(response => {
-            if (!response.ok) {
-                throw new Error(`Video file not found (${response.status})`);
+            if (response.ok) {
+                console.log('✅ Video file accessible for iOS');
+                setupIOSVideoPlayer();
+            } else {
+                console.log('❌ Video file not accessible, using fallback');
+                showIOSFallback();
             }
-            return response;
-        })
-        .then(() => {
-            // File exists, proceed with video loading
-            setTimeout(() => {
-                const video = createVideoElement();
-                
-                // Add comprehensive event listeners
-                video.addEventListener('loadstart', () => {
-                    console.log('📹 Video loading started');
-                });
-                
-                video.addEventListener('canplay', () => {
-                    console.log('✅ Video can play');
-                });
-                
-                video.addEventListener('play', () => {
-                    console.log('▶️ Video playing');
-                });
-                
-                video.addEventListener('pause', () => {
-                    console.log('⏸️ Video paused');
-                });
-                
-                video.addEventListener('loadeddata', () => {
-                    console.log('📊 Video data loaded');
-                });
-                
-                video.addEventListener('error', (e) => {
-                    console.error('❌ Video error:', e);
-                    console.error('Error details:', video.error);
-                    showVideoError(video.error);
-                });
-                
-                // Replace placeholder with video
-                videoWrapper.innerHTML = '';
-                videoWrapper.appendChild(video);
-                
-                // Add mobile-specific instructions
-                if (isMobile()) {
-                    const mobileHint = document.createElement('p');
-                    mobileHint.innerHTML = '📱 <small>Tap video to play • Swipe for controls</small>';
-                    mobileHint.style.textAlign = 'center';
-                    mobileHint.style.color = '#666';
-                    mobileHint.style.fontSize = '0.8rem';
-                    mobileHint.style.marginTop = '0.5rem';
-                    videoWrapper.appendChild(mobileHint);
-                }
-                
-            }, 1500);
         })
         .catch(error => {
-            console.error('❌ Video file check failed:', error);
-            showVideoError({ message: error.message });
+            console.error('❌ Video test failed:', error);
+            showIOSFallback();
         });
 }
 
-// Show video error with helpful information
-function showVideoError(error) {
+function setupIOSVideoPlayer() {
     const videoWrapper = document.querySelector('.video-wrapper');
-    const mobile = isMobile();
     
     videoWrapper.innerHTML = `
-        <div class="video-placeholder">
-            <div style="color: #e74c3c; text-align: center; padding: 2rem;">
-                <span style="font-size: 2rem;">⚠️</span>
-                <h3 style="margin: 1rem 0; color: #e74c3c;">Video Tidak Dapat Dimuat</h3>
+        <div style="position: relative; width: 100%; height: 100%; background: linear-gradient(135deg, #e74c3c, #c0392b); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+            
+            <!-- Hidden Video Element -->
+            <video 
+                id="ios-video"
+                controls 
+                muted 
+                playsinline
+                webkit-playsinline
+                preload="none"
+                x-webkit-airplay="allow"
+                style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px; display: none; background: #000;"
+                poster="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 250'><rect width='400' height='250' fill='%23e74c3c'/><text x='200' y='120' text-anchor='middle' fill='white' font-size='30'>🍅</text><text x='200' y='150' text-anchor='middle' fill='white' font-size='16'>Timelapse Tomat</text></svg>">
                 
-                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0; text-align: left;">
-                    <p><strong>Path:</strong> ./asset/tomat.mp4</p>
-                    <p><strong>Error:</strong> ${error?.message || 'Unknown error'}</p>
-                    <p><strong>Device:</strong> ${mobile ? 'Mobile' : 'Desktop'}</p>
+                <source src="./asset/tomat.mp4" type="video/mp4">
+                
+                <!-- iOS Fallback -->
+                <div style="padding: 2rem; text-align: center; color: white;">
+                    <p>Video tidak dapat dimuat di Safari iOS</p>
+                    <a href="./asset/tomat.mp4" target="_blank" style="color: #fff; text-decoration: underline;">Buka video langsung</a>
+                </div>
+            </video>
+            
+            <!-- iOS Custom Play Button -->
+            <div id="ios-play-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); border-radius: 10px; cursor: pointer; transition: all 0.3s ease;">
+                
+                <div style="width: 100px; height: 100px; background: rgba(255,255,255,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.3); transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                    <span style="color: #e74c3c; font-size: 2.5rem; margin-left: 8px;">▶</span>
                 </div>
                 
-                <div style="color: #666; font-size: 0.9rem; margin: 1rem 0;">
-                    ${mobile ? 
-                        '<p>🔧 <strong>Solusi untuk Mobile:</strong></p><ul style="text-align: left; display: inline-block;"><li>Pastikan koneksi internet stabil</li><li>Coba refresh halaman</li><li>Buka di browser desktop</li></ul>' : 
-                        '<p>🔧 <strong>Solusi untuk Desktop:</strong></p><ul style="text-align: left; display: inline-block;"><li>Periksa folder asset/ ada file tomat.mp4</li><li>Pastikan nama file sesuai (case-sensitive)</li><li>Coba refresh halaman</li></ul>'
-                    }
+                <div style="text-align: center; color: white;">
+                    <h3 style="margin: 0 0 0.5rem 0; font-size: 1.2rem; font-weight: bold;">Timelapse Pertumbuhan Tomat</h3>
+                    <p style="margin: 0; opacity: 0.9; font-size: 0.9rem;">Tap untuk memutar video</p>
+                    <small style="opacity: 0.7; font-size: 0.8rem;">Optimized for iOS Safari</small>
                 </div>
                 
-                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                    <button onclick="location.reload()" 
-                            style="padding: 0.5rem 1rem; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                        🔄 Muat Ulang
-                    </button>
-                    <a href="./asset/tomat.mp4" target="_blank" 
-                       style="display: inline-block; padding: 0.5rem 1rem; background: #27ae60; color: white; text-decoration: none; border-radius: 5px;">
-                        🔗 Buka Langsung
-                    </a>
-                </div>
+            </div>
+            
+        </div>
+    `;
+    
+    // iOS Play Handler
+    const playOverlay = document.getElementById('ios-play-overlay');
+    const video = document.getElementById('ios-video');
+    
+    playOverlay.addEventListener('click', function(e) {
+        e.preventDefault();
+        console.log('🍎 iOS play overlay clicked');
+        
+        // Add loading state to overlay
+        playOverlay.innerHTML = `
+            <div style="text-align: center; color: white;">
+                <div style="width: 60px; height: 60px; border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+                <p>Memuat video...</p>
+            </div>
+        `;
+        
+        // Setup video events BEFORE loading
+        video.addEventListener('loadstart', function() {
+            console.log('📹 iOS video loading started');
+        });
+        
+        video.addEventListener('loadedmetadata', function() {
+            console.log('📊 iOS video metadata loaded');
+        });
+        
+        video.addEventListener('canplay', function() {
+            console.log('✅ iOS video can play');
+            
+            // Hide overlay and show video
+            playOverlay.style.display = 'none';
+            video.style.display = 'block';
+            
+            // Try to play
+            const playPromise = video.play();
+            
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        console.log('🎬 iOS video playing successfully');
+                    })
+                    .catch(error => {
+                        console.error('❌ iOS video play failed:', error);
+                        showIOSPlayError(error);
+                    });
+            }
+        });
+        
+        video.addEventListener('error', function(e) {
+            console.error('❌ iOS video error:', e);
+            console.error('Error code:', video.error?.code);
+            console.error('Error message:', video.error?.message);
+            showIOSVideoError(video.error);
+        });
+        
+        video.addEventListener('stalled', function() {
+            console.warn('⚠️ iOS video stalled');
+        });
+        
+        video.addEventListener('waiting', function() {
+            console.warn('⏳ iOS video waiting');
+        });
+        
+        // Force load the video
+        video.load();
+        
+        // Fallback timeout
+        setTimeout(() => {
+            if (video.readyState === 0) {
+                console.error('⏰ iOS video load timeout');
+                showIOSVideoError({ message: 'Video load timeout' });
+            }
+        }, 10000);
+    });
+}
+
+function showIOSVideoError(error) {
+    const videoWrapper = document.querySelector('.video-wrapper');
+    
+    videoWrapper.innerHTML = `
+        <div style="padding: 2rem; text-align: center; background: #f8f9fa; border-radius: 10px; border: 2px dashed #e74c3c;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🍎</div>
+            <h3 style="color: #e74c3c; margin-bottom: 1rem;">Video Tidak Kompatibel dengan iOS Safari</h3>
+            
+            <div style="background: #fff; padding: 1.5rem; border-radius: 8px; margin: 1.5rem 0; text-align: left;">
+                <p style="margin: 0 0 1rem 0; font-weight: bold; color: #333;">Kemungkinan Penyebab:</p>
+                <ul style="color: #666; margin: 0; padding-left: 1.5rem; line-height: 1.6;">
+                    <li>Format video tidak didukung iOS Safari</li>
+                    <li>Video memerlukan codec H.264 + AAC</li>
+                    <li>File video terlalu besar untuk mobile</li>
+                    <li>Koneksi internet tidak stabil</li>
+                </ul>
+                
+                ${error?.message ? `<p style="margin-top: 1rem; padding: 0.5rem; background: #ffe6e6; border-radius: 4px; font-size: 0.9rem; color: #d63031;"><strong>Error:</strong> ${error.message}</p>` : ''}
+            </div>
+            
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="./asset/tomat.mp4" target="_blank" 
+                   style="display: inline-block; padding: 1rem 1.5rem; background: #e74c3c; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 2px 10px rgba(231,76,60,0.3);">
+                    📱 Buka di App Video
+                </a>
+                <button onclick="location.reload()" 
+                        style="padding: 1rem 1.5rem; background: #666; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                    🔄 Coba Lagi
+                </button>
+            </div>
+            
+            <div style="margin-top: 2rem; padding: 1rem; background: #e8f4fd; border-radius: 8px;">
+                <p style="margin: 0; color: #0066cc; font-size: 0.9rem;">
+                    💡 <strong>Tip:</strong> Coba buka website ini di <strong>Chrome</strong> atau <strong>Firefox</strong> mobile untuk hasil terbaik
+                </p>
             </div>
         </div>
     `;
+}
+
+function showIOSPlayError(error) {
+    const videoWrapper = document.querySelector('.video-wrapper');
+    
+    videoWrapper.innerHTML = `
+        <div style="padding: 2rem; text-align: center; background: #fff3cd; border-radius: 10px; border: 2px solid #ffc107;">
+            <div style="font-size: 2rem; margin-bottom: 1rem;">⚠️</div>
+            <h3 style="color: #856404; margin-bottom: 1rem;">Video Tidak Dapat Diputar</h3>
+            <p style="color: #856404; margin-bottom: 1.5rem;">iOS Safari memblokir pemutaran video otomatis</p>
+            
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <button onclick="document.getElementById('ios-video').play()" 
+                        style="padding: 1rem 1.5rem; background: #e74c3c; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                    ▶️ Coba Putar Manual
+                </button>
+                <a href="./asset/tomat.mp4" target="_blank" 
+                   style="display: inline-block; padding: 1rem 1.5rem; background: #28a745; color: white; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                    🔗 Buka Langsung
+                </a>
+            </div>
+        </div>
+    `;
+}
+
+function showIOSFallback() {
+    const videoWrapper = document.querySelector('.video-wrapper');
+    
+    videoWrapper.innerHTML = `
+        <div style="padding: 2rem; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">🍅</div>
+            <h3 style="margin-bottom: 1rem;">Timelapse Pertumbuhan Tomat</h3>
+            <p style="opacity: 0.9; margin-bottom: 2rem; line-height: 1.6;">
+                Saksikan perjalanan menakjubkan dari benih kecil hingga menjadi buah tomat yang matang
+            </p>
+            
+            <div style="background: rgba(255,255,255,0.1); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                <p style="margin: 0; font-size: 0.9rem; opacity: 0.8;">
+                    Video sedang dioptimalkan untuk perangkat iOS
+                </p>
+            </div>
+            
+            <a href="./asset/tomat.mp4" target="_blank" 
+               style="display: inline-block; padding: 1rem 2rem; background: rgba(255,255,255,0.2); color: white; text-decoration: none; border-radius: 25px; font-weight: bold; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3);">
+                📱 Tonton Video
+            </a>
+        </div>
+    `;
+}
+
+// Mobile Video (Non-iOS)
+function loadMobileVideo() {
+    const videoWrapper = document.querySelector('.video-wrapper');
+    
+    videoWrapper.innerHTML = `
+        <video 
+            controls 
+            muted 
+            playsinline
+            preload="metadata"
+            style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;">
+            
+            <source src="./asset/tomat.mp4" type="video/mp4">
+            
+            <div style="padding: 2rem; text-align: center; background: #f8f9fa;">
+                <p style="color: #e74c3c;">Video tidak dapat dimuat di perangkat mobile ini</p>
+                <a href="./asset/tomat.mp4" target="_blank" style="color: #e74c3c;">Buka video langsung</a>
+            </div>
+        </video>
+    `;
+}
+
+// Desktop Video
+function loadDesktopVideo() {
+    const videoWrapper = document.querySelector('.video-wrapper');
+    const placeholder = document.querySelector('.video-placeholder');
+    
+    placeholder.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #e74c3c; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 1rem;">Memuat video...</p>
+        </div>
+    `;
+    
+    setTimeout(() => {
+        const video = document.createElement('video');
+        video.controls = true;
+        video.autoplay = true;
+        video.muted = true;
+        video.loop = true;
+        video.style.width = '100%';
+        video.style.height = '100%';
+        video.style.objectFit = 'cover';
+        video.style.borderRadius = '10px';
+        
+        video.src = './asset/tomat.mp4';
+        
+        video.addEventListener('error', () => {
+            videoWrapper.innerHTML = `
+                <div style="padding: 2rem; text-align: center; background: #f8f9fa; border-radius: 10px;">
+                    <p style="color: #e74c3c; font-weight: bold;">❌ Video tidak dapat dimuat</p>
+                    <p style="color: #666;">Pastikan file tomat.mp4 ada di folder asset/</p>
+                </div>
+            `;
+        });
+        
+        videoWrapper.innerHTML = '';
+        videoWrapper.appendChild(video);
+    }, 1000);
 }
 
 // Reflection Save Function
@@ -391,27 +561,23 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// Debug function for testing
-function debugVideoPath() {
-    console.log('🔍 Testing video path...');
-    fetch('./asset/tomat.mp4', { method: 'HEAD' })
-        .then(response => {
-            if (response.ok) {
-                console.log('✅ Video file accessible');
-                console.log('📊 Content-Type:', response.headers.get('content-type'));
-                console.log('📏 Content-Length:', response.headers.get('content-length'));
-            } else {
-                console.error('❌ Video file not found:', response.status, response.statusText);
-            }
-        })
-        .catch(error => {
-            console.error('❌ Network error:', error);
-        });
-}
-
-// Auto-run debug on page load (remove in production)
+// Debug logging
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🍅 Filosofi Tomat App loaded');
-    console.log('📱 Device:', isMobile() ? 'Mobile' : 'Desktop');
-    debugVideoPath();
+    console.log('📱 Device Info:');
+    console.log('- iOS:', isIOS());
+    console.log('- Mobile:', isMobile());
+    console.log('- Safari:', isSafari());
+    console.log('- User Agent:', navigator.userAgent);
+    
+    // Test video file accessibility
+    fetch('./asset/tomat.mp4', { method: 'HEAD' })
+        .then(response => {
+            console.log('🎬 Video file status:', response.status);
+            console.log('📊 Content-Type:', response.headers.get('content-type'));
+            console.log('📏 Content-Length:', response.headers.get('content-length'));
+        })
+        .catch(error => {
+            console.error('❌ Video file test failed:', error);
+        });
 });

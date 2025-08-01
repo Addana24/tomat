@@ -23,33 +23,64 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Video Loading Function
-function loadVideo() {
-    const videoWrapper = document.querySelector('.video-wrapper');
-    const placeholder = document.querySelector('.video-placeholder');
-    
-    // Create video element
+// Utility function to detect mobile
+function isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+// Create video element with proper mobile support
+function createVideoElement() {
     const video = document.createElement('video');
+    
+    // Basic attributes
     video.controls = true;
-    video.autoplay = true;
     video.muted = true;
     video.loop = true;
+    
+    // Mobile-specific attributes
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    video.preload = 'metadata';
+    
+    // Styling
     video.style.width = '100%';
     video.style.height = '100%';
     video.style.objectFit = 'cover';
+    video.style.borderRadius = '10px';
     
-    // For demo purposes, using a placeholder video URL
-    // In real implementation, replace with actual timelapse video
-    video.innerHTML = `
-        <source src="asset/tomat.mp4" type="video/mp4">
-        <p>Browser Anda tidak mendukung video HTML5.</p>
-    `;
+    // Conditional autoplay (tidak di mobile)
+    if (!isMobile()) {
+        video.autoplay = true;
+    }
+    
+    // Create source element
+    const source = document.createElement('source');
+    source.src = './asset/tomat.mp4';
+    source.type = 'video/mp4';
+    video.appendChild(source);
+    
+    // Fallback text
+    const fallback = document.createElement('p');
+    fallback.textContent = 'Browser Anda tidak mendukung video HTML5.';
+    fallback.style.textAlign = 'center';
+    fallback.style.color = '#666';
+    fallback.style.padding = '2rem';
+    video.appendChild(fallback);
+    
+    return video;
+}
+
+// Video Loading Function - FINAL VERSION
+function loadVideo() {
+    const videoWrapper = document.querySelector('.video-wrapper');
+    const placeholder = document.querySelector('.video-placeholder');
     
     // Show loading state
     placeholder.innerHTML = `
         <div style="display: flex; flex-direction: column; align-items: center;">
             <div style="width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #e74c3c; border-radius: 50%; animation: spin 1s linear infinite;"></div>
             <p style="margin-top: 1rem;">Memuat video...</p>
+            <small style="color: #666; margin-top: 0.5rem;">Mohon tunggu sebentar</small>
         </div>
     `;
     
@@ -66,33 +97,106 @@ function loadVideo() {
         document.head.appendChild(style);
     }
     
-    // Simulate loading delay
-    setTimeout(() => {
-        videoWrapper.innerHTML = '';
-        videoWrapper.appendChild(video);
-        
-        // Add video event listeners
-        video.addEventListener('loadstart', () => {
-            console.log('Video loading started');
+    // Test if video file exists first
+    fetch('./asset/tomat.mp4', { method: 'HEAD' })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Video file not found (${response.status})`);
+            }
+            return response;
+        })
+        .then(() => {
+            // File exists, proceed with video loading
+            setTimeout(() => {
+                const video = createVideoElement();
+                
+                // Add comprehensive event listeners
+                video.addEventListener('loadstart', () => {
+                    console.log('📹 Video loading started');
+                });
+                
+                video.addEventListener('canplay', () => {
+                    console.log('✅ Video can play');
+                });
+                
+                video.addEventListener('play', () => {
+                    console.log('▶️ Video playing');
+                });
+                
+                video.addEventListener('pause', () => {
+                    console.log('⏸️ Video paused');
+                });
+                
+                video.addEventListener('loadeddata', () => {
+                    console.log('📊 Video data loaded');
+                });
+                
+                video.addEventListener('error', (e) => {
+                    console.error('❌ Video error:', e);
+                    console.error('Error details:', video.error);
+                    showVideoError(video.error);
+                });
+                
+                // Replace placeholder with video
+                videoWrapper.innerHTML = '';
+                videoWrapper.appendChild(video);
+                
+                // Add mobile-specific instructions
+                if (isMobile()) {
+                    const mobileHint = document.createElement('p');
+                    mobileHint.innerHTML = '📱 <small>Tap video to play • Swipe for controls</small>';
+                    mobileHint.style.textAlign = 'center';
+                    mobileHint.style.color = '#666';
+                    mobileHint.style.fontSize = '0.8rem';
+                    mobileHint.style.marginTop = '0.5rem';
+                    videoWrapper.appendChild(mobileHint);
+                }
+                
+            }, 1500);
+        })
+        .catch(error => {
+            console.error('❌ Video file check failed:', error);
+            showVideoError({ message: error.message });
         });
-        
-        video.addEventListener('canplay', () => {
-            console.log('Video can start playing');
-        });
-        
-        video.addEventListener('error', () => {
-            videoWrapper.innerHTML = `
-                <div class="video-placeholder">
-                    <div style="color: #e74c3c; text-align: center;">
-                        <span style="font-size: 2rem;">⚠️</span>
-                        <p>Video tidak dapat dimuat</p>
-                        <small>Silakan coba lagi nanti</small>
-                        <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">Muat Ulang</button>
-                    </div>
+}
+
+// Show video error with helpful information
+function showVideoError(error) {
+    const videoWrapper = document.querySelector('.video-wrapper');
+    const mobile = isMobile();
+    
+    videoWrapper.innerHTML = `
+        <div class="video-placeholder">
+            <div style="color: #e74c3c; text-align: center; padding: 2rem;">
+                <span style="font-size: 2rem;">⚠️</span>
+                <h3 style="margin: 1rem 0; color: #e74c3c;">Video Tidak Dapat Dimuat</h3>
+                
+                <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0; text-align: left;">
+                    <p><strong>Path:</strong> ./asset/tomat.mp4</p>
+                    <p><strong>Error:</strong> ${error?.message || 'Unknown error'}</p>
+                    <p><strong>Device:</strong> ${mobile ? 'Mobile' : 'Desktop'}</p>
                 </div>
-            `;
-        });
-    }, 1500);
+                
+                <div style="color: #666; font-size: 0.9rem; margin: 1rem 0;">
+                    ${mobile ? 
+                        '<p>🔧 <strong>Solusi untuk Mobile:</strong></p><ul style="text-align: left; display: inline-block;"><li>Pastikan koneksi internet stabil</li><li>Coba refresh halaman</li><li>Buka di browser desktop</li></ul>' : 
+                        '<p>🔧 <strong>Solusi untuk Desktop:</strong></p><ul style="text-align: left; display: inline-block;"><li>Periksa folder asset/ ada file tomat.mp4</li><li>Pastikan nama file sesuai (case-sensitive)</li><li>Coba refresh halaman</li></ul>'
+                    }
+                </div>
+                
+                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                    <button onclick="location.reload()" 
+                            style="padding: 0.5rem 1rem; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                        🔄 Muat Ulang
+                    </button>
+                    <a href="./asset/tomat.mp4" target="_blank" 
+                       style="display: inline-block; padding: 0.5rem 1rem; background: #27ae60; color: white; text-decoration: none; border-radius: 5px;">
+                        🔗 Buka Langsung
+                    </a>
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 // Reflection Save Function
@@ -277,7 +381,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
 // Service Worker Registration
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('./sw.js')
             .then((registration) => {
                 console.log('SW registered: ', registration);
             })
@@ -286,3 +390,28 @@ if ('serviceWorker' in navigator) {
             });
     });
 }
+
+// Debug function for testing
+function debugVideoPath() {
+    console.log('🔍 Testing video path...');
+    fetch('./asset/tomat.mp4', { method: 'HEAD' })
+        .then(response => {
+            if (response.ok) {
+                console.log('✅ Video file accessible');
+                console.log('📊 Content-Type:', response.headers.get('content-type'));
+                console.log('📏 Content-Length:', response.headers.get('content-length'));
+            } else {
+                console.error('❌ Video file not found:', response.status, response.statusText);
+            }
+        })
+        .catch(error => {
+            console.error('❌ Network error:', error);
+        });
+}
+
+// Auto-run debug on page load (remove in production)
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('🍅 Filosofi Tomat App loaded');
+    console.log('📱 Device:', isMobile() ? 'Mobile' : 'Desktop');
+    debugVideoPath();
+});
